@@ -1,6 +1,6 @@
 import json
 
-from sqlalchemy import Column, MetaData, Table, create_engine, Text, TIMESTAMP, func
+from sqlalchemy import MetaData, Table, create_engine, func
 from app.config import get_settings
 
 config = get_settings()
@@ -12,7 +12,7 @@ pg_db = config.PG_DB
 
 DATABASE_URL = f"postgresql+psycopg2://{pg_username}:{pg_password}@localhost:{pg_port}/{pg_db}"
 
-engine = create_engine(DATABASE_URL, echo=False)
+engine = create_engine(DATABASE_URL, echo=False)  # echo는 추가적인 로그를 자동으로 찍어줌(True 일 경우)
 metadata = MetaData()
 
 chat_info = Table("chat_info", metadata, autoload_with=engine)
