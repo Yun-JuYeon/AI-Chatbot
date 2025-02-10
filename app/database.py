@@ -2,7 +2,7 @@ import json
 
 from sqlalchemy import MetaData, Table, create_engine, func
 from app.config import get_settings
-from app.schema import getChatDBResponse, userInfoResponse
+from app.schema import allChatHistoryResponse, getChatDBResponse, userInfoResponse
 
 config = get_settings()
 
@@ -87,9 +87,29 @@ def get_chats(user_id: str, chat_id: str):
             messages=messages
         )
 
+# 해당 유저 전체 chatting 내역
+def get_all_chats(user_id: str):
+    with engine.connect() as conn:
+        select_query = chat_info.select().where(
+            chat_info.c.user_id==user_id
+        )
+        result = conn.execute(select_query)
+        rows = result.fetchall()
+        
+        chat_id = []
+        for row in rows:
+            chat_id.append(row.chat_id)
+
+        print(chat_id)
+
+        return allChatHistoryResponse(
+            user_id=user_id,
+            chat_id=chat_id
+        )
+
 
 # 실행
 if __name__ == "__main__":
-    #upsert_chat("test_user_id2", "test_chat_id2", [{"role": "user", "message": "너눈 누구냐냐!"}, {"role": "assistant", "message": "안녕하세요, 무엇을 도와드릴까요?"}])
+    upsert_chat("test_user_id", "test_chat_id3", [{"role": "user", "parts": ["채팅테스트!"]}, {"role": "assistant", "parts": ["안녕하세요, 무엇을 도와드릴까요?"]}])
     # get_chats("wndus01", "test_chat_id2")
-    get_user("wndus01")
+    # get_all_chats("test_user_id")

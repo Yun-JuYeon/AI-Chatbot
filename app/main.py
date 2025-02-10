@@ -6,11 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.chat_llm import chat_gemini
-from app.database import get_chats, get_user, upsert_chat
+from app.database import get_all_chats, get_chats, get_user, upsert_chat
 from app.schema import chatInfoResponse, userInfoResponse
 from app.state import messageState
 
-app = FastAPI()
+app = FastAPI(openapi_url="/openapi.json")
 config = get_settings()
 
 app.add_middleware(
@@ -52,23 +52,28 @@ async def new_chatting(user_id: str):
     )
 
 
+@app.get("/chat_history")
+async def all_chat_history(user_id: str):
+    chat_list = get_all_chats(user_id)
+    return chat_list
+
+
 @app.post("/chat_gemini")
 async def chat_with_gemini(chat_id: str, user_id: str, user_message: str):
     search_db = get_chats(user_id=user_id, chat_id=chat_id)
-    print(search_db)
+    #print(search_db)
 
     if search_db:
         state = messageState(chat_id=search_db.chat_id, user_id=search_db.user_id, messages=search_db.messages)
     else:
         state = messageState(chat_id=chat_id, user_id=user_id)
 
-    response = chat_gemini(state, user_message)
-    print(response)
-
-    update_db = upsert_chat(user_id=user_id, chat_id=chat_id, messages=state.messages)
-    print(update_db)
+    chat_gemini(state, user_message)
+    upsert_chat(user_id=user_id, chat_id=chat_id, messages=state.messages)
 
     return state
+
+
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0")

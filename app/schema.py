@@ -17,3 +17,8 @@ class getChatDBResponse(BaseModel):
     user_id: str
     chat_id: str
     messages: list[dict] = []
+
+
+class allChatHistoryResponse(BaseModel):
+    user_id: str
+    chat_id: list[str] = []

@@ -6,7 +6,7 @@ from app.state import messageState
 config = get_settings()
 GEMINI_API_KEY = config.GEMINI_KEY
 
-def chat_gemini(state: messageState, user_message):
+def chat_gemini(state: messageState, user_message: str):
     genai.configure(api_key=GEMINI_API_KEY)
 
     model = genai.GenerativeModel('gemini-1.5-flash')
@@ -27,7 +27,7 @@ def chat_gemini(state: messageState, user_message):
         'parts':[response.text]}
     )
 
-    print(f"history: {state.messages}")
+    #print(f"history: {state.messages}")
 
     return state
 
