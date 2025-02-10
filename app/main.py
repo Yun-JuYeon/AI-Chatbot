@@ -26,7 +26,7 @@ async def read_root():
     return "OK"
 
 @app.get("/login")
-async def get_id(user_id: str):
+async def get_user_id(user_id: str):
     user = get_user(user_id=user_id)
 
     if user:
