@@ -2,7 +2,7 @@ import json
 
 from sqlalchemy import MetaData, Table, create_engine, func
 from app.config import get_settings
-from app.schema import allChatHistoryResponse, getChatDBResponse, userInfoResponse
+from app.schema import allChatHistoryResponse
 
 config = get_settings()
 
@@ -67,8 +67,8 @@ def get_user(user_id: str):
 def get_chats(user_id: str, chat_id: str):
     with engine.connect() as conn:
         select_query = chat_info.select().where(
-            chat_info.c.user_id==user_id,
-            chat_info.c.chat_id==chat_id
+            chat_info.c.user_id == user_id,
+            chat_info.c.chat_id == chat_id
         )
         result = conn.execute(select_query)
         rows = result.first()
@@ -77,11 +77,16 @@ def get_chats(user_id: str, chat_id: str):
             print("DB에 데이터가 없습니다")
             return None
 
-        # messages = json.loads(rows.messages)
+        # rows.messages를 JSON으로 디코딩
+        decoded_messages = json.loads(rows.messages)
 
-        # print(messages)
+        # 기존 rows에 messages 필드를 추가한 딕셔너리 반환
+        return {
+            "user_id": rows.user_id,
+            "chat_id": rows.chat_id,
+            "messages": decoded_messages
+        }
 
-        return rows
 
 # 해당 유저 전체 chatting 내역
 def get_all_chats(user_id: str):
@@ -92,16 +97,13 @@ def get_all_chats(user_id: str):
         result = conn.execute(select_query)
         rows = result.fetchall()
         
-        chat_id = []
+        chat_list = []
         for row in rows:
-            chat_id.append(row.chat_id)
+            chat_list.append(row.chat_id)
 
-        print(chat_id)
+        print(chat_list)
 
-        return allChatHistoryResponse(
-            user_id=user_id,
-            chat_id=chat_id
-        )
+        return chat_list
 
 
 # 실행
