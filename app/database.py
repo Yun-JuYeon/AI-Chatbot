@@ -2,6 +2,7 @@ import json
 
 from sqlalchemy import MetaData, Table, create_engine, func
 from app.config import get_settings
+from app.schema import getChatDBResponse, userInfoResponse
 
 config = get_settings()
 
@@ -16,6 +17,7 @@ engine = create_engine(DATABASE_URL, echo=False)  # echo는 추가적인 로그�
 metadata = MetaData()
 
 chat_info = Table("chat_info", metadata, autoload_with=engine)
+user_info = Table("user_info", metadata, autoload_with=engine)
 
 # 데이터 삽입, 수정
 def upsert_chat(user_id: str, chat_id: str, messages: list[dict]):
@@ -45,6 +47,22 @@ def upsert_chat(user_id: str, chat_id: str, messages: list[dict]):
             print("새로운 데이터가 삽입되었습니다!")
 
 
+# user_info 테이블에서 사용자 확인
+def get_user(user_id: str):
+    with engine.connect() as conn:
+        select_user_query = user_info.select().where(
+            user_info.c.user_id==user_id,
+        )
+
+        get_user = conn.execute(select_user_query)
+        rows = get_user.first()
+
+        if rows:
+            print(f"로그인 사용자 ID: {rows.user_id}")
+            print(f"로그인 사용자 이름: {rows.user_name}")
+
+        return rows
+
 # 데이터 조회
 def get_chats(user_id: str, chat_id: str):
     with engine.connect() as conn:
@@ -53,13 +71,25 @@ def get_chats(user_id: str, chat_id: str):
             chat_info.c.chat_id==chat_id
         )
         result = conn.execute(select_query)
+        rows = result.first()
 
-        for rows in result:
-            messages = json.loads(rows.messages)
-            print(f"User ID: {rows.user_id}, Chat ID: {rows.chat_id}, Messages: {messages}, Created At: {rows.created_at}")
+        if not rows:
+            print("DB에 데이터가 없습니다")
+            return None
+
+        messages = json.loads(rows.messages)
+
+        # print(messages)
+
+        return getChatDBResponse(  # 기존 채팅 데이터 반환
+            user_id=rows.user_id,
+            chat_id=rows.chat_id,
+            messages=messages
+        )
 
 
 # 실행
 if __name__ == "__main__":
-    upsert_chat("test_user_id2", "test_chat_id2", [{"role": "user", "message": "너눈 누구냐냐!"}, {"role": "assistant", "message": "안녕하세요, 무엇을 도와드릴까요?"}])
-    get_chats("test_user_id2", "test_chat_id2")
+    #upsert_chat("test_user_id2", "test_chat_id2", [{"role": "user", "message": "너눈 누구냐냐!"}, {"role": "assistant", "message": "안녕하세요, 무엇을 도와드릴까요?"}])
+    # get_chats("wndus01", "test_chat_id2")
+    get_user("wndus01")

@@ -29,7 +29,7 @@ def chat_gemini(state: messageState, user_message):
 
     print(f"history: {state.messages}")
 
-    return response.text
+    return state
 
 
 if __name__ == "__main__":
