@@ -77,10 +77,8 @@ def get_chats(user_id: str, chat_id: str):
             print("DB에 데이터가 없습니다")
             return None
 
-        # rows.messages를 JSON으로 디코딩
         decoded_messages = json.loads(rows.messages)
 
-        # 기존 rows에 messages 필드를 추가한 딕셔너리 반환
         return {
             "user_id": rows.user_id,
             "chat_id": rows.chat_id,
