@@ -1,8 +1,8 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class infoResponse(BaseModel):
-    user_id: uuid.UUID
-    chat_id: uuid.UUID
+    user_id: uuid.UUID = Field(default_factory=uuid.uuid4)
+    chat_id: uuid.UUID = Field(default_factory=uuid.uuid4)

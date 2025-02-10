@@ -25,13 +25,7 @@ async def read_root():
 
 @app.get("/start_chat")
 async def get_id():
-    user_id = uuid.UUID()
-    chat_id = uuid.UUID()
-
-    return infoResponse(
-        user_id=user_id,
-        chat_id=chat_id
-    )
+    return infoResponse()
 
 @app.post("/chat_gemini")
 async def chat_with_gemini(chat_id: str, user_message: str):
