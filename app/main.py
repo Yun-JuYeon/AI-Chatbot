@@ -1,3 +1,4 @@
+import json
 from re import L
 import uuid
 import uvicorn
@@ -7,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.chat_llm import chat_gemini
 from app.database import get_all_chats, get_chats, get_user, upsert_chat
-from app.schema import chatInfoResponse, userInfoResponse
+from app.schema import chatHistoryDetailsResponse, chatInfoResponse, userInfoResponse
 from app.state import messageState
 
 app = FastAPI(openapi_url="/openapi.json")
@@ -56,6 +57,18 @@ async def new_chatting(user_id: str):
 async def all_chat_history(user_id: str):
     chat_list = get_all_chats(user_id)
     return chat_list
+
+
+@app.get("/chat_details")
+async def chat_details(user_id: str, chat_id: str):
+    rows = get_chats(user_id=user_id, chat_id=chat_id)
+    messages = json.loads(rows.messages)
+    
+    return chatHistoryDetailsResponse(
+        user_id = user_id,
+        chat_id = chat_id,
+        messages = messages 
+    )
 
 
 @app.post("/chat_gemini")

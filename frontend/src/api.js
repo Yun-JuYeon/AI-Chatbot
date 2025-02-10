@@ -55,3 +55,16 @@ export const chatWithGemini = async (chatId, userId, message) => {
     return null;
   }
 };
+
+
+export const getChatDetails = async (userId, chatId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/chat_details`, {
+      params: { user_id: userId, chat_id: chatId },
+    });
+    return response.data; // 반환된 데이터
+  } catch (error) {
+    console.error("Error fetching chat details:", error);
+    return null; // 실패 시 null 반환
+  }
+};

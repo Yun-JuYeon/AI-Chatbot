@@ -77,15 +77,11 @@ def get_chats(user_id: str, chat_id: str):
             print("DB에 데이터가 없습니다")
             return None
 
-        messages = json.loads(rows.messages)
+        # messages = json.loads(rows.messages)
 
         # print(messages)
 
-        return getChatDBResponse(  # 기존 채팅 데이터 반환
-            user_id=rows.user_id,
-            chat_id=rows.chat_id,
-            messages=messages
-        )
+        return rows
 
 # 해당 유저 전체 chatting 내역
 def get_all_chats(user_id: str):
