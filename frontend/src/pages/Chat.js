@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, TextField, Button, Typography, Card, CardContent } from "@mui/material";
 import ReactMarkdown from "react-markdown";
-import { createNewChat, chatWithGemini, getChatHistory, getChatDetails } from "../api";
+import { createNewChat, chatWithGeminiStream, getChatHistory, getChatDetails } from "../api";
 import History from "./History";
 
 function Chat() {
@@ -9,6 +9,8 @@ function Chat() {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState([]); // 현재 화면에 표시될 대화 기록
   const [userChats, setUserChats] = useState([]); // 좌측 히스토리 데이터
+  const [isStreaming, setIsStreaming] = useState(false); // 스트리밍 상태
+  let eventSource = null;
 
   const userId = localStorage.getItem("user_id");
 
@@ -29,34 +31,47 @@ function Chat() {
   const handleSelectChat = async (selectedChatId) => {
     const chatDetails = await getChatDetails(userId, selectedChatId); // API 호출
     if (chatDetails && chatDetails.messages) {
-      setChatId(selectedChatId); // 현재 활성화된 chat_id 업데이트
-      setChatHistory(chatDetails.messages); // API 응답의 messages를 채팅 기록에 설정
+      setChatId(selectedChatId);
+      setChatHistory(chatDetails.messages);
     } else {
       console.error("Failed to fetch chat details");
     }
   };
 
-  // 메시지 전송
+  // 메시지 전송 및 스트리밍 방식으로 응답 받기
   const sendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || isStreaming) return;
 
-    const response = await chatWithGemini(chatId, userId, message);
+    // 새로운 메시지 UI에 추가
+    setChatHistory((prev) => [
+      ...prev,
+      { role: "user", parts: [message] },
+      { role: "model", parts: [""] }, // 스트리밍 중인 응답을 표시할 공간
+    ]);
+    setMessage(""); // 입력창 비우기
+    setIsStreaming(true);
 
-    if (response && response.messages) {
-      const latestBotMessage = [...response.messages]
-        .reverse()
-        .find((msg) => msg.role === "model");
-      const botReply = latestBotMessage?.parts?.join(" ") || "응답을 가져올 수 없습니다.";
+    let newMessage = "";
+    eventSource = chatWithGeminiStream(chatId, userId, message, (chunk) => {
+      newMessage += chunk;
 
-      setChatHistory([
-        ...chatHistory,
-        { role: "user", parts: [message] },
-        { role: "model", parts: [botReply] },
-      ]);
-      setMessage(""); // 입력창 비우기
-    } else {
-      console.error("챗봇 응답이 비어 있습니다.");
-    }
+      setChatHistory((prev) => {
+        const updatedHistory = [...prev];
+        updatedHistory[updatedHistory.length - 1] = {
+          role: "model",
+          parts: [newMessage], // 스트리밍된 메시지 업데이트
+        };
+        return updatedHistory;
+      });
+    });
+
+    eventSource.onopen = () => console.log("SSE 연결됨");
+
+    eventSource.onerror = () => {
+      console.log("SSE 연결 종료");
+      eventSource.close();
+      setIsStreaming(false);
+    };
   };
 
   return (
@@ -91,7 +106,7 @@ function Chat() {
                   </Card>
                 </Box>
               )}
-              {/* 봇 응답 */}
+              {/* 봇 응답 (스트리밍 중에도 실시간으로 업데이트됨) */}
               {chat.role === "model" && (
                 <Box display="flex" justifyContent="flex-start">
                   <Card
@@ -121,8 +136,15 @@ function Chat() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="메시지를 입력하세요..."
+            disabled={isStreaming} // 스트리밍 중일 때 입력 비활성화
           />
-          <Button variant="contained" color="primary" onClick={sendMessage} sx={{ marginLeft: 2 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={sendMessage}
+            sx={{ marginLeft: 2 }}
+            disabled={isStreaming} // 스트리밍 중일 때 버튼 비활성화
+          >
             전송
           </Button>
         </Box>

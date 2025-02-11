@@ -44,17 +44,31 @@ export const getChatHistory = async (userId) => {
 
 
 // Gemini 챗봇과 대화
-export const chatWithGemini = async (chatId, userId, message) => {
-  try {
-    const response = await apiClient.post(
-      `/chat_gemini?chat_id=${chatId}&user_id=${userId}&user_message=${message}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Chat Gemini Error:", error);
-    return null;
-  }
+export const chatWithGeminiStream = (chatId, userId, message, onMessage) => {
+  const eventSource = new EventSource(
+    `http://localhost:8000/chat_gemini?chat_id=${chatId}&user_id=${userId}&user_message=${encodeURIComponent(message)}`
+  );
+
+  eventSource.onmessage = (event) => {
+    const data = event.data.trim();
+    if (data) {
+      onMessage(data); // 실시간으로 UI 업데이트
+    }
+  };
+
+  eventSource.onerror = () => {
+    console.error("SSE 연결 오류 발생, 다시 연결 시도...");
+    eventSource.close();
+
+    // 🔹 SSE 연결 재시도 (3초 후)
+    setTimeout(() => {
+      chatWithGeminiStream(chatId, userId, message, onMessage);
+    }, 3000);
+  };
+
+  return eventSource;
 };
+
 
 
 export const getChatDetails = async (userId, chatId) => {

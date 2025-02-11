@@ -1,6 +1,9 @@
+import asyncio
 import json
 from re import L
+import time
 import uuid
+from fastapi.responses import StreamingResponse
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,7 +21,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins={"*"},
     allow_credentials=True,
-    allow_methods={"OPTIONS", "GET", "POST"},
+    allow_methods={"*"},
     allow_headers={"*"},
 )
 
@@ -74,20 +77,29 @@ async def chat_details(user_id: str, chat_id: str):
     )
 
 
-@app.post("/chat_gemini")
+@app.get("/chat_gemini")
 async def chat_with_gemini(chat_id: str, user_id: str, user_message: str):
     search_db = get_chats(user_id=user_id, chat_id=chat_id)
-    #print(search_db)
 
     if search_db:
-        state = messageState(chat_id=search_db["chat_id"], user_id=search_db["user_id"], messages=search_db["messages"])
+        state = messageState(
+            chat_id=search_db["chat_id"], 
+            user_id=search_db["user_id"], 
+            messages=search_db["messages"]
+        )
     else:
-        state = messageState(chat_id=chat_id, user_id=user_id)
+        state = messageState(
+            chat_id=chat_id, 
+            user_id=user_id
+        )
 
-    chat_gemini(state, user_message)
-    upsert_chat(user_id=user_id, chat_id=chat_id, messages=state.messages)
+    async def chat_stream():
+        async for chunk in chat_gemini(state, user_message):
+            yield chunk
 
-    return state
+        upsert_chat(user_id=user_id, chat_id=chat_id, messages=state.messages)
+
+    return StreamingResponse(chat_stream(), media_type="text/event-stream")
 
 
 
