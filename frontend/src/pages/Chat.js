@@ -113,9 +113,7 @@ function Chat() {
                 <Box display="flex" justifyContent="flex-start">
                   <Card sx={{ maxWidth: "70%", backgroundColor: "#f5f5f5", borderRadius: "12px" }}>
                     <CardContent>
-                      <Typography variant="body1">
                         <ReactMarkdown>{chat.parts.join(" ")}</ReactMarkdown>
-                      </Typography>
                     </CardContent>
                   </Card>
                 </Box>
