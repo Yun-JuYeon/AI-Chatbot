@@ -1,23 +1,9 @@
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.graph import CompiledGraph
-from pydantic import BaseModel
 
+from study_memo.s_state import SState
+from study_memo.s_nodes import *
 
-
-# ==========state============
-class s_state(BaseModel):
-    name: str
-    age: int
-
-# ==========nodes============
-def add_name(state: s_state):
-    state.name = "윤주연"
-
-def add_age(state: s_state):
-    state.name = 25
-
-
-# ==========langgraph============
 '''
 **Langgraph**
   > StateGraph(설계도): 상태(state), 입력(input), 출력(output), 설정(config)등을 정의.
@@ -32,8 +18,9 @@ def add_age(state: s_state):
     - 그래프 컴파일 시 내부적으로 상태 머신을 구성하고, 그래프 경로를 최적화 함.
     -> 이 작업을 매번 반복하지 않고, 어플리케이션 시작 시 한 번만 컴파일 하고 그것을 재사용하기 위해 사용함.(컴파일 후 재사용 패턴)
 '''
+
 def s_graph() -> CompiledGraph:
-    graph: StateGraph = StateGraph(state_schema=s_state)
+    graph: StateGraph = StateGraph(state_schema=SState)
 
     graph.add_node("add_name", add_name)
     graph.add_node("add_age", add_age)
@@ -47,3 +34,14 @@ def s_graph() -> CompiledGraph:
 sgraph = s_graph()
 
 
+
+import asyncio
+
+async def main():
+    state = SState(name = "", age = 0)
+    response = await sgraph.ainvoke(input=state)
+    print(response)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+    
