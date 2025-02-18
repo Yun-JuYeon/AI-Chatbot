@@ -6,7 +6,7 @@ authors = [
     {name = "윤주연", email = "zoe4121@naver.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<4.0"
 dependencies = [
     "python-pptx (>=1.0.2,<2.0.0)", 
     "python-pdf (>=0.40,<0.41)", 
@@ -20,7 +20,8 @@ dependencies = [
     "pydantic (>=2.10.6,<3.0.0)", 
     "pydantic-settings (>=2.7.1,<3.0.0)", 
     "google-generativeai (>=0.8.4,<0.9.0)", 
-    "psycopg2-binary (>=2.9.10,<3.0.0)"
+    "psycopg2-binary (>=2.9.10,<3.0.0)", 
+    "langgraph (>=0.2.73,<0.3.0)"
 ]
 
 [tool.poetry]
