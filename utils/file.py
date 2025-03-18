@@ -30,6 +30,19 @@ def open_txt_file(file_path):
         print(data)
 
 def open_docx_file(file_path):
+    """
+    document.part.rels 쓰면 이미지 있는 부분 이미지 추출 가능.
+
+    for rel in doc.part.rels:
+        if "image" in doc.part.rels[rel].target_ref:  # 이미지인지 확인
+            image_data = doc.part.rels[rel].target_part.blob
+            with open(f"extracted_image_{image_count}.png", "wb") as img_file:
+                img_file.write(image_data)
+            image_count += 1
+
+    print(f"{image_count}개의 이미지를 추출했습니다.")
+    
+    """
     # file_path = "assets/김건희 도이치모터스.docx"
     doc = Document(file_path)
 
