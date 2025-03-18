@@ -7,6 +7,8 @@ import json
 
 from docx import Document
 from pptx import Presentation
+from PIL import Image
+import pytesseract
 
 
 # =====================================
@@ -29,6 +31,7 @@ def open_txt_file(file_path):
         data = r.read()
         print(data)
 
+
 def open_docx_file(file_path):
     """
     document.part.rels 쓰면 이미지 있는 부분 이미지 추출 가능.
@@ -41,17 +44,66 @@ def open_docx_file(file_path):
             image_count += 1
 
     print(f"{image_count}개의 이미지를 추출했습니다.")
-    
+
     """
-    # file_path = "assets/김건희 도이치모터스.docx"
+    # file_path = "app/assets/김건희 도이치모터스.docx"
     doc = Document(file_path)
 
     for chunk in doc.paragraphs:
         # time.sleep(0.5)
         print(chunk.text)
 
+
+def open_docx_file_with_image(file_path):
+    """ docx 파일 읽으면서 이미지 있는 부분은 테서렉트로 OCR """
+    doc = Document(file_path)
+
+    output_folder = "app/assets/extracted_images"
+    os.makedirs(output_folder, exist_ok=True)
+
+    image_count = 0
+    processed_texts = set()
+
+    for block in doc.element.body:
+        # 텍스트 추출 (다양한 태그에 포함된 텍스트를 처리)
+        if block.tag.endswith("p"):  # 문단 (paragraph)
+            # print(block.tag)
+            for para in block.iter():
+                # print(para.tag)
+                if para.tag.endswith('t') and para.text:  # w:t (text) 태그
+                    para_text = para.text.strip()
+                    if para_text not in processed_texts:
+                        processed_texts.add(para_text)
+                        print(para_text)
+
+                # 이미지가 있을 때, 해당 참조를 찾아서 이미지 추출
+                elif para.tag.endswith('pic'):
+                    for rel in doc.part.rels:
+                        if "image" in doc.part.rels[rel].target_ref:
+                            image_data = doc.part.rels[rel].target_part.blob
+                            image_path = os.path.join(output_folder, f"image_{image_count}.png")
+
+                            # 이미지 저장
+                            with open(image_path, "wb") as img_file:
+                                img_file.write(image_data)
+
+                            print(f"[이미지 저장됨: {image_path}]")
+
+                            # OCR 실행 (이미지에서 텍스트 추출)
+                            img = Image.open(image_path)
+                            extracted_text = pytesseract.image_to_string(img)
+                            print(f"[OCR 결과 - {image_path}]:\n{extracted_text}\n")
+
+                            image_count += 1
+
+    if image_count == 0:
+        print("이미지가 없습니다.")
+    else:
+        print(f"{image_count}개의 이미지가 처리되었습니다.")
+
+
 def open_pptx_file(file_path):
-    # file_path = "assets/랭체인과 프롬프트.pptx"
+    # file_path = "app/assets/랭체인과 프롬프트.pptx"
     ppt = Presentation(file_path)
 
     for i, slide in enumerate(ppt.slides):
@@ -60,8 +112,9 @@ def open_pptx_file(file_path):
             if hasattr(shape, "text"):
                 print(shape.text)
 
+
 def open_pdf_file(file_path):
-    # file_path = "assets/랭체인 완벽입문 정리.pdf"
+    # file_path = "app/assets/랭체인 완벽입문 정리.pdf"
     pdf = fitz.open(file_path)
 
     for page_num in range(len(pdf)):
@@ -74,15 +127,16 @@ def open_pdf_file(file_path):
     
     pdf.close()
 
+
 def open_json_file(file_path):
-    # file_path = "assets/law_103962_20100331.json"
+    # file_path = "app/assets/law_103962_20100331.json"
     with open(file_path, "r", encoding="utf-8") as f:
         json_data = json.load(f)
         print(json_data)
         
 
 async def file_download(file_path:str, file_name:str):
-    save_path = f"assets/D_{file_name}"
+    save_path = f"app/assets/D_{file_name}"
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
     if file_path.startswith("http"):
@@ -115,16 +169,19 @@ async def file_download(file_path:str, file_name:str):
 
 
 if __name__=="__main__":
-    file_paths = [
-        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-        "assets/랭체인 완벽입문 정리.pdf",
-        "https://www.w3.org/TR/PNG/iso_8859-1.txt",
-        "assets/김건희 도이치모터스.docx",
-        "assets/참사 지원금 수령.docx",
-        "assets/law_103962_20100331.json",
-        "assets/랭체인과 프롬프트.pptx"
-    ]
+    # file_paths = [
+    #     "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    #     "app/assets/랭체인 완벽입문 정리.pdf",
+    #     "https://www.w3.org/TR/PNG/iso_8859-1.txt",
+    #     "app/assets/김건희 도이치모터스.docx",
+    #     "app/assets/참사 지원금 수령.docx",
+    #     "app/assets/law_103962_20100331.json",
+    #     "app/assets/랭체인과 프롬프트.pptx"
+    # ]
     
-    for i, file_path in enumerate(file_paths):
-        print(f"[{i+1}] {file_path}")
+    # for i, file_path in enumerate(file_paths):
+    #     print(f"[{i+1}] {file_path}")
+
+    file_path = "app/assets/조선비즈 화제성 기사 생성 이슈사항.docx"
+    open_docx_file_with_image(file_path)
         
