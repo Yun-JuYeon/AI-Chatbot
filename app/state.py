@@ -4,5 +4,7 @@ from pydantic import BaseModel
 
 
 class messageState(BaseModel):
-    chat_id: uuid.UUID
+    user_id: str
+    chat_id: str
+    
     messages: List[Dict] = []
