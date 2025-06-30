@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.chat_llm import chat_gemini
+from app.core.chat_llm import chat_gemini
 from app.schema import infoResponse
 from app.state import messageState
 
