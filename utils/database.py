@@ -51,15 +51,15 @@ def upsert_chat(user_id: str, chat_id: str, messages: list[dict]):
 def get_user(user_id: str):
     with engine.connect() as conn:
         select_user_query = user_info.select().where(
-            user_info.c.user_id==user_id,
+            user_info.c.id==user_id,
         )
 
         get_user = conn.execute(select_user_query)
         rows = get_user.first()
 
         if rows:
-            print(f"로그인 사용자 ID: {rows.user_id}")
-            print(f"로그인 사용자 이름: {rows.user_name}")
+            print(f"로그인 사용자 ID: {rows.id}")
+            print(f"로그인 사용자 이름: {rows.name}")
 
         return rows
 
@@ -79,6 +79,12 @@ def get_chats(user_id: str, chat_id: str):
 
         decoded_messages = json.loads(rows.messages)
 
+        print(f"""
+            user_id: {rows.user_id},
+            chat_id: {rows.chat_id},
+            messages: {decoded_messages}
+        """)
+        
         return {
             "user_id": rows.user_id,
             "chat_id": rows.chat_id,
@@ -106,6 +112,7 @@ def get_all_chats(user_id: str):
 
 # 실행
 if __name__ == "__main__":
-    upsert_chat("test_user_id", "test_chat_id3", [{"role": "user", "parts": ["채팅테스트!"]}, {"role": "assistant", "parts": ["안녕하세요, 무엇을 도와드릴까요?"]}])
-    # get_chats("wndus01", "test_chat_id2")
-    # get_all_chats("test_user_id")
+    import uuid 
+    #upsert_chat("1", str(uuid.uuid4()), [{"role": "user", "parts": ["채팅테스트!"]}, {"role": "assistant", "parts": ["안녕하세요, 무엇을 도와드릴까요?"]}])
+    get_chats("1", "8ca64517-def4-4acb-b8a6-4193c81fde22")
+    #get_all_chats("test")

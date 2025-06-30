@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.core.chat_llm import chat_gemini
 from utils.database import get_all_chats, get_chats, get_user, upsert_chat
-from app.schema import allChatHistoryResponse, chatHistoryDetailsResponse, chatInfoResponse, userInfoResponse
+from app.schema import ChatRequest, allChatHistoryResponse, chatHistoryDetailsResponse, chatInfoResponse, userInfoResponse
 from app.state import messageState
 
 app = FastAPI(openapi_url="/openapi.json")
@@ -30,8 +30,8 @@ async def get_user_id(user_id: str):
     user = get_user(user_id=user_id)
 
     if user:
-        user_id = user.user_id
-        user_name = user.user_name
+        user_id = user.id
+        user_name = user.name
     else:
         raise HTTPException(
             status_code=401,
@@ -73,8 +73,11 @@ async def chat_details(user_id: str, chat_id: str):
     )
 
 
-@app.get("/chat_gemini")
-async def chat_with_gemini(chat_id: str, user_id: str, user_message: str):
+@app.post("/chat_gemini")
+async def chat_with_gemini(body: ChatRequest):
+    user_id = body.user_id
+    chat_id = body.chat_id
+    user_message = body.user_message
     search_db = get_chats(user_id=user_id, chat_id=chat_id)
 
     if search_db:
@@ -92,6 +95,7 @@ async def chat_with_gemini(chat_id: str, user_id: str, user_message: str):
     async def chat_stream():
         async for chunk in chat_gemini(state, user_message):
             yield chunk
+        yield "data: [DONE]\n\n"
 
         upsert_chat(user_id=user_id, chat_id=chat_id, messages=state.messages)
 

@@ -1,4 +1,3 @@
-from turtle import st
 import uuid
 
 from pydantic import BaseModel, Field
@@ -27,3 +26,9 @@ class chatHistoryDetailsResponse(BaseModel):
     user_id: str
     chat_id: str
     messages: list[dict] = []
+
+
+class ChatRequest(BaseModel):
+    chat_id: str
+    user_id: str
+    user_message: str
