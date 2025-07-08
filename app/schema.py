@@ -6,7 +6,8 @@ from pydantic import BaseModel, Field
 class userInfoResponse(BaseModel):
     user_id: str
     user_name: str
-    
+
+
 class chatInfoResponse(BaseModel):
     user_id: str
     chat_id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -21,6 +22,7 @@ class getChatDBResponse(BaseModel):
 class allChatHistoryResponse(BaseModel):
     user_id: str
     chat_id: list[str] = []
+
 
 class chatHistoryDetailsResponse(BaseModel):
     user_id: str

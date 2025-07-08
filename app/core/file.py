@@ -1,6 +1,5 @@
 import requests
 import os
-import time
 import mimetypes
 import fitz
 import json
@@ -26,7 +25,9 @@ python에서 제공하는 open을 사용하면 자동적으로 마지막에 clos
   - 파일을 읽으면 읽은 바이트 수만큼 포인터가 이동함.
 
 """
-def open_txt_file(file_path): 
+
+
+def open_txt_file(file_path):
     with open(file_path, "r", encoding="utf-8") as r:
         data = r.read()
         print(data)
@@ -55,7 +56,7 @@ def open_docx_file(file_path):
 
 
 def open_docx_file_with_image(file_path):
-    """ docx 파일 읽으면서 이미지 있는 부분은 테서렉트로 OCR """
+    """docx 파일 읽으면서 이미지 있는 부분은 테서렉트로 OCR"""
     doc = Document(file_path)
 
     output_folder = "app/assets/extracted_images"
@@ -70,18 +71,20 @@ def open_docx_file_with_image(file_path):
             # print(block.tag)
             for para in block.iter():
                 # print(para.tag)
-                if para.tag.endswith('t') and para.text:  # w:t (text) 태그
+                if para.tag.endswith("t") and para.text:  # w:t (text) 태그
                     para_text = para.text.strip()
                     if para_text not in processed_texts:
                         processed_texts.add(para_text)
                         print(para_text)
 
                 # 이미지가 있을 때, 해당 참조를 찾아서 이미지 추출
-                elif para.tag.endswith('pic'):
+                elif para.tag.endswith("pic"):
                     for rel in doc.part.rels:
                         if "image" in doc.part.rels[rel].target_ref:
                             image_data = doc.part.rels[rel].target_part.blob
-                            image_path = os.path.join(output_folder, f"image_{image_count}.png")
+                            image_path = os.path.join(
+                                output_folder, f"image_{image_count}.png"
+                            )
 
                             # 이미지 저장
                             with open(image_path, "wb") as img_file:
@@ -124,7 +127,7 @@ def open_pdf_file(file_path):
         print(f"📌 [페이지 {page_num + 1}]")
         print(text)
         print("-" * 50)
-    
+
     pdf.close()
 
 
@@ -133,9 +136,9 @@ def open_json_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         json_data = json.load(f)
         print(json_data)
-        
 
-async def file_download(file_path:str, file_name:str):
+
+async def file_download(file_path: str, file_name: str):
     save_path = f"app/assets/D_{file_name}"
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
@@ -144,13 +147,13 @@ async def file_download(file_path:str, file_name:str):
             response = requests.get(url=file_path, stream=True)
             response.raise_for_status()
         except:
-            raise ValueError (f"❌ 다운로드 실패: {response.status_code}")
+            raise ValueError(f"❌ 다운로드 실패: {response.status_code}")
 
         with open(save_path, "wb") as f:  # wb는 바이너리 쓰기 모드
-            for chunk in response.iter_content(chunk_size=8192): # 8KB 단위로 다운로드
+            for chunk in response.iter_content(chunk_size=8192):  # 8KB 단위로 다운로드
                 f.write(chunk)
             print(f"✅ PDF 파일 다운로드 완료: {save_path}")
-        
+
     else:
         file_type = mimetypes.guess_type(file_name)
         file_extension = mimetypes.guess_extension(file_type[0])
@@ -164,11 +167,11 @@ async def file_download(file_path:str, file_name:str):
                 open_pptx_file(file_path)
             case ".json":
                 open_json_file(file_path)
-            case _ :
-                raise ValueError (f"{file_name} 파일은 지원하는 확장자가 아닙니다.")
+            case _:
+                raise ValueError(f"{file_name} 파일은 지원하는 확장자가 아닙니다.")
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     # file_paths = [
     #     "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
     #     "app/assets/랭체인 완벽입문 정리.pdf",
@@ -178,10 +181,9 @@ if __name__=="__main__":
     #     "app/assets/law_103962_20100331.json",
     #     "app/assets/랭체인과 프롬프트.pptx"
     # ]
-    
+
     # for i, file_path in enumerate(file_paths):
     #     print(f"[{i+1}] {file_path}")
 
     file_path = "app/assets/조선비즈 화제성 기사 생성 이슈사항.docx"
     open_docx_file_with_image(file_path)
-        
