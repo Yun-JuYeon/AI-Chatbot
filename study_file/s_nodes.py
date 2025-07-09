@@ -1,4 +1,4 @@
-from study_memo.s_state import SState
+from study_file.s_state import SState
 
 
 async def add_name(state: SState) -> SState:

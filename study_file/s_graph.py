@@ -1,8 +1,8 @@
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.graph import CompiledGraph
 
-from study_memo.s_state import SState
-from study_memo.s_nodes import *
+from study_file.s_state import SState
+from study_file.s_nodes import *
 
 """
 **Langgraph**
